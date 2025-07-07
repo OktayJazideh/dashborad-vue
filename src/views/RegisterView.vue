@@ -7,6 +7,10 @@
         <input v-model="email" type="email" required class="input" />
       </div>
       <div class="mb-4">
+        <label class="block mb-1">نام</label>
+        <input v-model="name" type="text" required class="input" />
+      </div>
+      <div class="mb-4">
         <label class="block mb-1">رمز عبور</label>
         <input v-model="password" type="password" required minlength="6" class="input" />
       </div>
@@ -24,16 +28,20 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { userService } from '../services/userService';
+import { useAuthStore } from '../store';
 
 const email = ref('');
+const name = ref('');
 const password = ref('');
 const confirm = ref('');
 const error = ref('');
 const router = useRouter();
+const auth = useAuthStore();
 
-function onRegister() {
+async function onRegister() {
   error.value = '';
-  if (!email.value || !password.value || !confirm.value) {
+  if (!email.value || !password.value || !confirm.value || !name.value) {
     error.value = 'همه فیلدها الزامی است.';
     return;
   }
@@ -45,8 +53,16 @@ function onRegister() {
     error.value = 'رمز عبور و تکرار آن یکسان نیست.';
     return;
   }
-  // ثبت موفق (در پروژه واقعی باید API صدا زده شود)
-  router.push('/login');
+  try {
+    // ثبت کاربر در mockapi
+    const res = await userService.create({ email: email.value, name: name.value, password: password.value });
+    // لاگین خودکار (توکن جعلی)
+    const fakeToken = 'fake-jwt-token';
+    auth.login(fakeToken, { email: email.value, name: name.value });
+    router.push('/dashboard');
+  } catch (e) {
+    error.value = 'خطا در ثبت‌نام. لطفاً دوباره تلاش کنید.';
+  }
 }
 </script>
 
